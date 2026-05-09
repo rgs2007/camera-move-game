@@ -1,0 +1,106 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Camera Move Game Logic Tests</title>
+    <style>
+        body {
+            font-family: Arial, Helvetica, sans-serif;
+            background: #0b1020;
+            color: #edf2ff;
+            padding: 24px;
+        }
+
+        h1 {
+            margin-bottom: 12px;
+        }
+
+        #results {
+            white-space: pre-line;
+            line-height: 1.5;
+        }
+
+        .pass {
+            color: #8ef2ff;
+        }
+
+        .fail {
+            color: #ff8aa6;
+        }
+    </style>
+</head>
+<body>
+    <h1>Camera Move Game Logic Tests</h1>
+    <div id="results">Running...</div>
+
+    <script type="module">
+        import { describeMotion, getMotionHit } from "../src/input-map.js";
+        import { clamp, normalizeVector } from "../src/math.js";
+
+        const results = document.getElementById("results");
+        const lines = [];
+
+        function assert(label, condition, details) {
+            const passed = Boolean(condition);
+            lines.push(`${passed ? "PASS" : "FAIL"}: ${label}${details ? ` - ${details}` : ""}`);
+            return passed;
+        }
+
+        function run() {
+            let passCount = 0;
+            let failCount = 0;
+
+            passCount += assert("clamp keeps values inside bounds", clamp(12, 0, 10) === 10) ? 1 : 0;
+            failCount += clamp(12, 0, 10) === 10 ? 0 : 1;
+
+            const normalized = normalizeVector(3, 4);
+            const normalizedPass = Math.abs(normalized.x - 0.6) < 0.0001 && Math.abs(normalized.y - 0.8) < 0.0001;
+            passCount += assert("normalizeVector returns unit direction", normalizedPass) ? 1 : 0;
+            failCount += normalizedPass ? 0 : 1;
+
+            const described = describeMotion(0.5, -0.5, 0.42);
+            const describePass = described === "Up Right 42%";
+            passCount += assert("describeMotion returns readable status", describePass, described) ? 1 : 0;
+            failCount += describePass ? 0 : 1;
+
+            const motionHit = getMotionHit(
+                { x: 18, y: 22 },
+                { x: 10, y: 12 },
+                200,
+                {
+                    motionHitDeltaDivisor: 5.2,
+                    motionHitMinDelta: 0.035,
+                    activePixelActivityDivisor: 340,
+                    activityWeight: 0.68,
+                    motionHitStrengthWeight: 0.86,
+                }
+            );
+            const motionPass = motionHit && motionHit.strength > 0 && motionHit.x > 0 && motionHit.y > 0;
+            passCount += assert("getMotionHit returns a directional impulse for real movement", motionPass, JSON.stringify(motionHit)) ? 1 : 0;
+            failCount += motionPass ? 0 : 1;
+
+            const noHit = getMotionHit(
+                { x: 10.01, y: 10.01 },
+                { x: 10, y: 10 },
+                12,
+                {
+                    motionHitDeltaDivisor: 5.2,
+                    motionHitMinDelta: 0.035,
+                    activePixelActivityDivisor: 340,
+                    activityWeight: 0.68,
+                    motionHitStrengthWeight: 0.86,
+                }
+            );
+            const noHitPass = noHit === null;
+            passCount += assert("getMotionHit ignores tiny movement", noHitPass) ? 1 : 0;
+            failCount += noHitPass ? 0 : 1;
+
+            results.innerHTML = `<strong>${passCount} passed, ${failCount} failed</strong>\n\n` +
+                lines.map((line) => `<span class="${line.startsWith("PASS") ? "pass" : "fail"}">${line}</span>`).join("\n");
+        }
+
+        run();
+    </script>
+</body>
+</html>

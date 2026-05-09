@@ -4,255 +4,18 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Camera Move Game</title>
-    <style>
-        * {
-            box-sizing: border-box;
-            margin: 0;
-            padding: 0;
-        }
-
-        :root {
-            color-scheme: dark;
-            --bg: #090b12;
-            --panel: rgba(17, 22, 35, 0.92);
-            --panel-border: rgba(130, 161, 255, 0.18);
-            --text: #ecf1ff;
-            --muted: #a6b2d3;
-            --accent: #79a8ff;
-            --accent-strong: #8ef2ff;
-            --ball: #ff6f91;
-            --goal: #8ef2ff;
-        }
-
-        body {
-            min-height: 100vh;
-            background:
-                radial-gradient(circle at top, rgba(60, 96, 188, 0.18), transparent 36rem),
-                linear-gradient(180deg, #0d1220 0%, var(--bg) 100%);
-            color: var(--text);
-            font-family: Arial, Helvetica, sans-serif;
-        }
-
-        main {
-            width: min(1160px, 100%);
-            margin: 0 auto;
-            padding: 28px;
-            display: grid;
-            gap: 18px;
-        }
-
-        .header {
-            display: grid;
-            gap: 10px;
-        }
-
-        .eyebrow {
-            color: var(--accent-strong);
-            font-size: 12px;
-            font-weight: 700;
-            letter-spacing: 0.08em;
-            text-transform: uppercase;
-        }
-
-        h1 {
-            font-size: clamp(34px, 6vw, 64px);
-            line-height: 0.98;
-        }
-
-        .subtitle {
-            max-width: 66ch;
-            color: var(--muted);
-            font-size: 16px;
-            line-height: 1.55;
-        }
-
-        .layout {
-            display: grid;
-            grid-template-columns: minmax(260px, 320px) minmax(0, 1fr);
-            gap: 18px;
-        }
-
-        .panel {
-            background: var(--panel);
-            border: 1px solid var(--panel-border);
-            border-radius: 12px;
-            padding: 18px;
-            box-shadow: 0 18px 40px rgba(0, 0, 0, 0.22);
-        }
-
-        .panel h2 {
-            font-size: 13px;
-            letter-spacing: 0.06em;
-            text-transform: uppercase;
-            color: var(--accent-strong);
-            margin-bottom: 12px;
-        }
-
-        .stack {
-            display: grid;
-            gap: 12px;
-        }
-
-        .stat {
-            display: grid;
-            gap: 4px;
-            padding: 12px;
-            border-radius: 10px;
-            background: rgba(255, 255, 255, 0.03);
-        }
-
-        .stat-label {
-            color: var(--muted);
-            font-size: 12px;
-        }
-
-        .stat-value {
-            font-size: 20px;
-            font-weight: 700;
-        }
-
-        .controls {
-            display: flex;
-            gap: 10px;
-            flex-wrap: wrap;
-        }
-
-        button {
-            min-height: 42px;
-            padding: 0 16px;
-            border: 1px solid rgba(142, 242, 255, 0.2);
-            border-radius: 999px;
-            background: rgba(121, 168, 255, 0.08);
-            color: var(--text);
-            cursor: pointer;
-            font-size: 14px;
-        }
-
-        button:hover,
-        button:focus-visible {
-            background: rgba(121, 168, 255, 0.16);
-            outline: 1px solid rgba(142, 242, 255, 0.38);
-        }
-
-        .game-panel {
-            display: grid;
-            gap: 12px;
-        }
-
-        .game-shell {
-            position: relative;
-            aspect-ratio: 16 / 10;
-            min-height: 460px;
-            overflow: hidden;
-            border-radius: 14px;
-            border: 1px solid rgba(142, 242, 255, 0.18);
-            background:
-                radial-gradient(circle at top, rgba(121, 168, 255, 0.1), transparent 22rem),
-                linear-gradient(180deg, rgba(18, 25, 42, 0.96), rgba(8, 11, 18, 0.98));
-        }
-
-        .game-grid {
-            position: absolute;
-            inset: 0;
-            background-image:
-                linear-gradient(rgba(255, 255, 255, 0.05) 1px, transparent 1px),
-                linear-gradient(90deg, rgba(255, 255, 255, 0.05) 1px, transparent 1px);
-            background-size: 34px 34px;
-            opacity: 0.28;
-            pointer-events: none;
-        }
-
-        .camera-hud {
-            position: absolute;
-            top: 16px;
-            left: 16px;
-            display: grid;
-            gap: 8px;
-            z-index: 2;
-        }
-
-        .hud-chip {
-            display: inline-flex;
-            align-items: center;
-            gap: 8px;
-            width: fit-content;
-            padding: 8px 12px;
-            border-radius: 999px;
-            background: rgba(10, 14, 22, 0.72);
-            border: 1px solid rgba(142, 242, 255, 0.14);
-            color: var(--muted);
-            font-size: 12px;
-        }
-
-        .hud-chip strong {
-            color: var(--text);
-        }
-
-        .playfield {
-            position: absolute;
-            inset: 0;
-            overflow: hidden;
-        }
-
-        .goal {
-            position: absolute;
-            width: 120px;
-            height: 120px;
-            border: 2px dashed rgba(142, 242, 255, 0.52);
-            border-radius: 24px;
-            box-shadow: 0 0 34px rgba(142, 242, 255, 0.18);
-        }
-
-        .ball {
-            position: absolute;
-            width: 72px;
-            height: 72px;
-            border-radius: 999px;
-            background:
-                radial-gradient(circle at 30% 30%, #fff1f6 0%, #ffadc1 18%, #ff6f91 52%, #b62b4f 100%);
-            box-shadow:
-                0 14px 28px rgba(255, 111, 145, 0.3),
-                0 0 24px rgba(255, 111, 145, 0.18);
-            transform: translate3d(0, 0, 0);
-            transition: transform 90ms linear;
-        }
-
-        .instruction {
-            color: var(--muted);
-            font-size: 14px;
-            line-height: 1.5;
-        }
-
-        .camera-preview {
-            width: 100%;
-            aspect-ratio: 4 / 3;
-            border-radius: 12px;
-            border: 1px solid rgba(142, 242, 255, 0.12);
-            overflow: hidden;
-            background: rgba(255, 255, 255, 0.02);
-        }
-
-        video {
-            width: 100%;
-            height: 100%;
-            object-fit: cover;
-            transform: scaleX(-1);
-            opacity: 0.76;
-        }
-
-        @media (max-width: 900px) {
-            .layout {
-                grid-template-columns: 1fr;
-            }
-
-            .game-shell {
-                min-height: 360px;
-            }
-        }
-    </style>
+    <!--
+        Keep the page head simple. Visual design lives in the stylesheet and game
+        behavior lives in small browser-native modules under src/.
+    -->
+    <link rel="stylesheet" href="styles/game.css">
 </head>
 <body>
     <main>
+        <!--
+            The header explains the prototype in plain language before the player
+            reaches the live controls and playfield.
+        -->
         <header class="header">
             <p class="eyebrow">Experimental Input Game</p>
             <h1>Camera Move Game</h1>
@@ -264,6 +27,10 @@
         </header>
 
         <section class="layout">
+            <!--
+                The left column handles status, controls, and camera preview so the
+                player can understand both the input source and the current game state.
+            -->
             <aside class="panel stack">
                 <div>
                     <h2>Status</h2>
@@ -288,6 +55,7 @@
                     <div class="controls">
                         <button id="startButton" type="button">Start Camera</button>
                         <button id="resetButton" type="button">Reset Game</button>
+                        <a href="http://localhost:4173/index.html" id="localhostLink">Open Localhost</a>
                     </div>
                 </div>
 
@@ -295,8 +63,16 @@
                     <h2>How It Works</h2>
                     <p class="instruction">
                         Move your body left, right, up, or down in front of the camera.
-                        The game compares the current frame with the previous frame and
-                        nudges the ball toward the strongest motion direction.
+                        The game tracks where motion is happening in the video and uses
+                        that moving center point to push the ball across the playfield.
+                    </p>
+                    <p class="instruction" id="cameraHint">
+                        If the browser blocks the camera, try the same page on
+                        <code>http://localhost:4173</code> or reset site camera permissions.
+                    </p>
+                    <p class="instruction" id="playfieldHint">
+                        The playfield also supports arrow keys or WASD, so game movement
+                        can still be tested even when camera access is unavailable.
                     </p>
                 </div>
 
@@ -308,6 +84,11 @@
                 </div>
             </aside>
 
+            <!--
+                The right column is the playable surface. The camera shadow, marker,
+                goal, and ball stay layered inside one shell so the player can see
+                how input maps to motion.
+            -->
             <section class="panel game-panel">
                 <h2>Playfield</h2>
                 <div class="game-shell">
@@ -315,8 +96,12 @@
                     <div class="camera-hud">
                         <div class="hud-chip"><strong>Tip</strong><span>Move your body to push the ball.</span></div>
                         <div class="hud-chip"><strong>Goal</strong><span>Touch the cyan target to score.</span></div>
+                        <div class="hud-chip debug-chip" id="debugChip">Debug
+Waiting</div>
                     </div>
                     <div class="playfield" id="playfield">
+                        <video class="playfield-camera" id="playfieldCamera" autoplay muted playsinline aria-hidden="true"></video>
+                        <div class="motion-marker" id="motionMarker" aria-hidden="true"></div>
                         <div class="goal" id="goal"></div>
                         <div class="ball" id="ball"></div>
                     </div>
@@ -325,228 +110,10 @@
         </section>
     </main>
 
-    <script>
-        // The camera game starts simple: compare consecutive frames, estimate the
-        // dominant movement direction, and map that direction to ball movement.
-        const startButton = document.getElementById('startButton');
-        const resetButton = document.getElementById('resetButton');
-        const cameraStatus = document.getElementById('cameraStatus');
-        const motionStatus = document.getElementById('motionStatus');
-        const scoreValue = document.getElementById('scoreValue');
-        const cameraPreview = document.getElementById('cameraPreview');
-        const playfield = document.getElementById('playfield');
-        const ball = document.getElementById('ball');
-        const goal = document.getElementById('goal');
-
-        let cameraStream = null;
-        let animationFrame = 0;
-        let previousFrame = null;
-        let score = 0;
-
-        const sampleCanvas = document.createElement('canvas');
-        const sampleContext = sampleCanvas.getContext('2d', { willReadFrequently: true });
-
-        const ballState = {
-            x: 0,
-            y: 0,
-            size: 72,
-        };
-
-        const goalState = {
-            x: 0,
-            y: 0,
-            size: 120,
-        };
-
-        function clamp(value, minimum, maximum) {
-            return Math.min(maximum, Math.max(minimum, value));
-        }
-
-        function updateBall() {
-            ball.style.transform = `translate3d(${ballState.x}px, ${ballState.y}px, 0)`;
-        }
-
-        function updateGoal() {
-            goal.style.transform = `translate3d(${goalState.x}px, ${goalState.y}px, 0)`;
-        }
-
-        function resetPositions() {
-            const fieldWidth = playfield.clientWidth;
-            const fieldHeight = playfield.clientHeight;
-
-            ballState.x = Math.round(fieldWidth * 0.18);
-            ballState.y = Math.round(fieldHeight * 0.42);
-            goalState.x = Math.round(fieldWidth * 0.7);
-            goalState.y = Math.round(fieldHeight * 0.24);
-
-            updateBall();
-            updateGoal();
-        }
-
-        function resetGame() {
-            score = 0;
-            previousFrame = null;
-            motionStatus.textContent = 'Idle';
-            scoreValue.textContent = String(score);
-            resetPositions();
-        }
-
-        function checkGoalCollision() {
-            const ballCenterX = ballState.x + ballState.size / 2;
-            const ballCenterY = ballState.y + ballState.size / 2;
-            const goalCenterX = goalState.x + goalState.size / 2;
-            const goalCenterY = goalState.y + goalState.size / 2;
-            const distance = Math.hypot(ballCenterX - goalCenterX, ballCenterY - goalCenterY);
-
-            if (distance < 72) {
-                score += 1;
-                scoreValue.textContent = String(score);
-                goalState.x = Math.round(Math.random() * (playfield.clientWidth - goalState.size));
-                goalState.y = Math.round(Math.random() * (playfield.clientHeight - goalState.size));
-                updateGoal();
-            }
-        }
-
-        function applyMotionToBall(horizontal, vertical, strength) {
-            const fieldWidth = playfield.clientWidth;
-            const fieldHeight = playfield.clientHeight;
-            const speed = 16 * strength;
-
-            ballState.x = clamp(ballState.x + horizontal * speed, 0, fieldWidth - ballState.size);
-            ballState.y = clamp(ballState.y + vertical * speed, 0, fieldHeight - ballState.size);
-
-            updateBall();
-            checkGoalCollision();
-        }
-
-        function describeMotion(horizontal, vertical) {
-            const horizontalLabel = horizontal > 0.16 ? 'Right' : horizontal < -0.16 ? 'Left' : '';
-            const verticalLabel = vertical > 0.16 ? 'Down' : vertical < -0.16 ? 'Up' : '';
-            const description = [verticalLabel, horizontalLabel].filter(Boolean).join(' ');
-            motionStatus.textContent = description || 'Idle';
-        }
-
-        function sampleMotionFrame() {
-            if (!cameraStream || cameraPreview.readyState < 2) {
-                animationFrame = requestAnimationFrame(sampleMotionFrame);
-                return;
-            }
-
-            const sampleWidth = 64;
-            const sampleHeight = 48;
-            sampleCanvas.width = sampleWidth;
-            sampleCanvas.height = sampleHeight;
-
-            sampleContext.save();
-            sampleContext.translate(sampleWidth, 0);
-            sampleContext.scale(-1, 1);
-            sampleContext.drawImage(cameraPreview, 0, 0, sampleWidth, sampleHeight);
-            sampleContext.restore();
-
-            const frame = sampleContext.getImageData(0, 0, sampleWidth, sampleHeight).data;
-            const currentFrame = new Float32Array(sampleWidth * sampleHeight);
-
-            for (let pixelIndex = 0; pixelIndex < frame.length; pixelIndex += 4) {
-                const red = frame[pixelIndex];
-                const green = frame[pixelIndex + 1];
-                const blue = frame[pixelIndex + 2];
-                currentFrame[pixelIndex / 4] = (red * 0.299 + green * 0.587 + blue * 0.114) / 255;
-            }
-
-            if (previousFrame) {
-                let leftEnergy = 0;
-                let rightEnergy = 0;
-                let upperEnergy = 0;
-                let lowerEnergy = 0;
-
-                for (let y = 0; y < sampleHeight; y += 1) {
-                    for (let x = 0; x < sampleWidth; x += 1) {
-                        const index = y * sampleWidth + x;
-                        const delta = Math.abs(currentFrame[index] - previousFrame[index]);
-
-                        if (x < sampleWidth / 2) {
-                            leftEnergy += delta;
-                        } else {
-                            rightEnergy += delta;
-                        }
-
-                        if (y < sampleHeight / 2) {
-                            upperEnergy += delta;
-                        } else {
-                            lowerEnergy += delta;
-                        }
-                    }
-                }
-
-                const horizontal = clamp((rightEnergy - leftEnergy) * 1.8, -1, 1);
-                const vertical = clamp((lowerEnergy - upperEnergy) * 1.8, -1, 1);
-                const strength = clamp((Math.abs(horizontal) + Math.abs(vertical)) * 0.5, 0, 1);
-
-                describeMotion(horizontal, vertical);
-
-                if (strength > 0.05) {
-                    applyMotionToBall(horizontal, vertical, strength);
-                }
-            }
-
-            previousFrame = currentFrame;
-            animationFrame = requestAnimationFrame(sampleMotionFrame);
-        }
-
-        async function startCamera() {
-            if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
-                cameraStatus.textContent = 'Unsupported';
-                console.error('Camera access is not supported in this browser.');
-                return;
-            }
-
-            try {
-                cameraStream = await navigator.mediaDevices.getUserMedia({
-                    video: {
-                        facingMode: 'user',
-                        width: { ideal: 640 },
-                        height: { ideal: 480 },
-                    },
-                    audio: false,
-                });
-
-                cameraPreview.srcObject = cameraStream;
-                await cameraPreview.play();
-                cameraStatus.textContent = 'Live';
-                previousFrame = null;
-
-                if (animationFrame) {
-                    cancelAnimationFrame(animationFrame);
-                }
-
-                animationFrame = requestAnimationFrame(sampleMotionFrame);
-            } catch (error) {
-                cameraStatus.textContent = 'Blocked';
-                console.error('Unable to start the camera for the move game.', error);
-            }
-        }
-
-        function stopCamera() {
-            if (animationFrame) {
-                cancelAnimationFrame(animationFrame);
-                animationFrame = 0;
-            }
-
-            if (cameraStream) {
-                cameraStream.getTracks().forEach((track) => track.stop());
-                cameraStream = null;
-            }
-
-            cameraPreview.srcObject = null;
-            cameraStatus.textContent = 'Stopped';
-        }
-
-        startButton.addEventListener('click', startCamera);
-        resetButton.addEventListener('click', resetGame);
-        window.addEventListener('resize', resetPositions);
-        window.addEventListener('beforeunload', stopCamera);
-
-        resetPositions();
-    </script>
+    <!--
+        The page boots from one ES module entrypoint. That entrypoint wires
+        together camera lifecycle, lightweight vision, physics, and DOM updates.
+    -->
+    <script type="module" src="src/main.js"></script>
 </body>
 </html>
