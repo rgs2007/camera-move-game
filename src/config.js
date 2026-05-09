@@ -6,7 +6,7 @@
 export const GAME_CONFIG = {
     sampleWidth: 48,
     sampleHeight: 36,
-    visionFrameIntervalMs: 90,
+    visionFrameIntervalMs: 45,
     pixelDifferenceThreshold: 28,
     minActivePixels: 26,
     activePixelActivityDivisor: 340,
@@ -16,9 +16,10 @@ export const GAME_CONFIG = {
     motionHitStrengthWeight: 0.86,
     minStrengthToMove: 0.01,
     minFollowStrength: 0.35,
-    smoothingPreviousWeight: 0.42,
-    smoothingCurrentWeight: 0.58,
+    smoothingPreviousWeight: 0.18,
+    smoothingCurrentWeight: 0.82,
     ballSize: 72,
+    inputBallSize: 52,
     goalSize: 120,
     ballInitialSpeedX: 220,
     ballInitialSpeedY: 150,
@@ -27,9 +28,10 @@ export const GAME_CONFIG = {
     ballKeyboardSpeed: 24,
     ballDragPerSecond: 0.985,
     ballBounceDamping: 0.94,
-    ballShotImpulse: 260,
+    inputBallMaxSpeed: 1400,
+    inputBallCollisionRestitution: 0.86,
+    inputBallCollisionInfluence: 0.72,
     goalCollisionDistance: 72,
-    directFollowDebug: false,
 };
 
 /*

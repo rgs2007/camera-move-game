@@ -141,6 +141,13 @@ Add lightweight browser-based tests as game logic grows beyond simple DOM wiring
   mapping from camera input to ball movement legible to the user.
 - Keep the ball movement responsive enough to feel interactive, but avoid chaotic
   motion that makes the game unreadable or uncontrollable.
+- Represent camera motion as a visible blue input ball when possible. The player
+  ball should react through circle collision physics with that input ball instead
+  of hidden attraction forces, because visible cause-and-effect makes the control
+  loop easier to understand and tune.
+- Keep the visible input ball responsive. Avoid CSS position easing on the camera
+  ball and prefer low-latency smoothing values so it stays close to the live
+  camera movement.
 - Gameplay tuning values such as speed, sensitivity, thresholds, and damping
   should stay explicit and grouped near the logic that uses them.
 - The page may include on-screen hints that teach the player how to move their

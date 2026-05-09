@@ -63,8 +63,8 @@
                     <h2>How It Works</h2>
                     <p class="instruction">
                         Move your body left, right, up, or down in front of the camera.
-                        The game tracks where motion is happening in the video and uses
-                        that moving center point to push the ball across the playfield.
+                        The game turns that moving camera signal into a blue input ball,
+                        then uses circle collisions to strike the pink ball.
                     </p>
                     <p class="instruction" id="cameraHint">
                         If the browser blocks the camera, try the same page on
@@ -85,23 +85,23 @@
             </aside>
 
             <!--
-                The right column is the playable surface. The camera shadow, marker,
-                goal, and ball stay layered inside one shell so the player can see
-                how input maps to motion.
+                The right column is the playable surface. The camera shadow, blue
+                input ball, goal, and player ball stay layered inside one shell so
+                the player can see how input maps to motion.
             -->
             <section class="panel game-panel">
                 <h2>Playfield</h2>
                 <div class="game-shell">
                     <div class="game-grid" aria-hidden="true"></div>
                     <div class="camera-hud">
-                        <div class="hud-chip"><strong>Tip</strong><span>Move your body to push the ball.</span></div>
+                        <div class="hud-chip"><strong>Tip</strong><span>Move your body to swing the blue ball.</span></div>
                         <div class="hud-chip"><strong>Goal</strong><span>Touch the cyan target to score.</span></div>
                         <div class="hud-chip debug-chip" id="debugChip">Debug
 Waiting</div>
                     </div>
                     <div class="playfield" id="playfield">
                         <video class="playfield-camera" id="playfieldCamera" autoplay muted playsinline aria-hidden="true"></video>
-                        <div class="motion-marker" id="motionMarker" aria-hidden="true"></div>
+                        <div class="input-ball" id="inputBall" aria-hidden="true"></div>
                         <div class="goal" id="goal"></div>
                         <div class="ball" id="ball"></div>
                     </div>

@@ -253,35 +253,37 @@ button:focus-visible {
     transition: transform 90ms linear;
 }
 
-.motion-marker {
+.input-ball {
     position: absolute;
-    width: 42px;
-    height: 42px;
+    width: 52px;
+    height: 52px;
     border-radius: 999px;
-    border: 2px solid rgba(142, 242, 255, 0.9);
+    border: 2px solid rgba(150, 222, 255, 0.72);
+    background:
+        radial-gradient(circle at 28% 26%, #ecfbff 0%, #8fe9ff 18%, #2498ff 58%, #0c3e9d 100%);
     box-shadow:
-        0 0 22px rgba(142, 242, 255, 0.28),
-        inset 0 0 12px rgba(142, 242, 255, 0.16);
-    background: rgba(142, 242, 255, 0.08);
+        0 12px 26px rgba(36, 152, 255, 0.28),
+        0 0 30px rgba(142, 242, 255, 0.24),
+        inset -8px -10px 18px rgba(7, 36, 94, 0.32);
     transform: translate3d(-999px, -999px, 0);
     pointer-events: none;
     opacity: 0;
-    transition: transform 110ms ease-out, opacity 140ms ease;
+    transition: opacity 100ms ease;
 }
 
-.motion-marker::after {
+.input-ball::after {
     content: "";
     position: absolute;
-    left: 50%;
-    top: 50%;
-    width: 10px;
-    height: 10px;
+    left: 28%;
+    top: 25%;
+    width: 12px;
+    height: 12px;
     border-radius: 999px;
-    background: rgba(142, 242, 255, 0.95);
-    transform: translate(-50%, -50%);
+    background: rgba(255, 255, 255, 0.88);
+    filter: blur(0.2px);
 }
 
-.motion-marker-live {
+.input-ball-live {
     opacity: 1;
 }
 

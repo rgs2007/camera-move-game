@@ -16,7 +16,7 @@ const elements = getDomElements();
 const ui = createUi(elements);
 const physics = createPhysics(elements, GAME_CONFIG, ui);
 const camera = createCameraController(elements, CAMERA_REQUEST_CONSTRAINTS);
-const vision = createVisionEngine(elements.cameraPreview, elements.playfield, GAME_CONFIG, GAME_CONFIG.ballSize);
+const vision = createVisionEngine(elements.cameraPreview, elements.playfield, GAME_CONFIG, GAME_CONFIG.inputBallSize);
 
 let animationFrame = 0;
 let lastFrameAt = 0;
@@ -53,7 +53,7 @@ function resetGame() {
     resetTrackingState();
     ui.setMotionStatus("Idle");
     physics.resetGame();
-    ui.setMotionMarkerVisible(false);
+    physics.hideInputBall();
     updateDebugDisplay("target --", "strength 0.00", "tiny-js");
 }
 
@@ -85,6 +85,9 @@ function sampleMotionFrame() {
         return;
     }
 
+    const visionDeltaSeconds = lastVisionAt
+        ? clamp((now - lastVisionAt) / 1000, 0.03, 0.2)
+        : GAME_CONFIG.visionFrameIntervalMs / 1000;
     lastVisionAt = now;
     const motionCenter = vision.captureMotionCenter();
     if (motionCenter) {
@@ -94,21 +97,20 @@ function sampleMotionFrame() {
         if (!vision.isFiniteMotionTarget(motionTarget)) {
             previousMotionCenter = null;
             ui.setMotionStatus("Math Error");
-            ui.setMotionMarkerVisible(false);
+            physics.hideInputBall();
             updateDebugDisplay("target invalid", "strength invalid", "hit");
             animationFrame = window.requestAnimationFrame(sampleMotionFrame);
             return;
         }
 
-        ui.updateMotionMarker(
-            { x: motionTarget.targetX, y: motionTarget.targetY },
-            physics.state.ball.size
-        );
-
         const motionHit = getMotionHit(smoothedCenter, previousMotionCenter, motionCenter.activePixels, GAME_CONFIG);
         if (motionHit && motionHit.strength > GAME_CONFIG.minStrengthToMove) {
             ui.setMotionStatus(describeMotion(motionHit.x, motionHit.y, motionHit.strength));
-            physics.applyMotionHit(motionHit.x, motionHit.y, motionHit.strength);
+            physics.updateInputBall(
+                { x: motionTarget.targetX, y: motionTarget.targetY },
+                visionDeltaSeconds,
+                motionHit.strength
+            );
             updateDebugDisplay(
                 `target ${Math.round(motionTarget.targetX)}, ${Math.round(motionTarget.targetY)}`,
                 `strength ${motionHit.strength.toFixed(2)}`,
@@ -116,6 +118,11 @@ function sampleMotionFrame() {
             );
         } else {
             ui.setMotionStatus("Tracking");
+            physics.updateInputBall(
+                { x: motionTarget.targetX, y: motionTarget.targetY },
+                visionDeltaSeconds,
+                0
+            );
             updateDebugDisplay(
                 `target ${Math.round(motionTarget.targetX)}, ${Math.round(motionTarget.targetY)}`,
                 "strength 0.00",
@@ -127,7 +134,7 @@ function sampleMotionFrame() {
     } else {
         previousMotionCenter = null;
         ui.setMotionStatus("Idle");
-        ui.setMotionMarkerVisible(false);
+        physics.hideInputBall();
         updateDebugDisplay("target --", "strength 0.00", "tiny-js");
     }
 
@@ -196,7 +203,7 @@ function stopCamera() {
     ui.setCameraStatus("Stopped");
     ui.setMotionStatus("Idle");
     ui.setPlayfieldCameraVisible(false);
-    ui.setMotionMarkerVisible(false);
+    physics.hideInputBall();
 }
 
 function handleKeyboardControl(event) {

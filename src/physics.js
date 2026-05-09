@@ -15,6 +15,14 @@ export function createPhysics(elements, config, ui) {
             vx: config.ballInitialSpeedX,
             vy: config.ballInitialSpeedY,
         },
+        inputBall: {
+            x: 0,
+            y: 0,
+            size: config.inputBallSize,
+            vx: 0,
+            vy: 0,
+            visible: false,
+        },
         goal: {
             x: 0,
             y: 0,
@@ -35,6 +43,17 @@ export function createPhysics(elements, config, ui) {
 
     function renderGoal() {
         ui.updateGoal(state.goal);
+    }
+
+    function renderInputBall() {
+        ui.updateInputBall(state.inputBall);
+    }
+
+    function getCircleCenter(circle) {
+        return {
+            x: circle.x + circle.size / 2,
+            y: circle.y + circle.size / 2,
+        };
     }
 
     function keepBallSpeedHealthy() {
@@ -76,10 +95,17 @@ export function createPhysics(elements, config, ui) {
         state.ball.y = Math.round(bounds.height * 0.42);
         state.ball.vx = config.ballInitialSpeedX;
         state.ball.vy = config.ballInitialSpeedY;
+        state.inputBall.x = Math.round(bounds.width * 0.5);
+        state.inputBall.y = Math.round(bounds.height * 0.5);
+        state.inputBall.vx = 0;
+        state.inputBall.vy = 0;
+        state.inputBall.visible = false;
         state.goal.x = Math.round(bounds.width * 0.7);
         state.goal.y = Math.round(bounds.height * 0.24);
 
         renderBall();
+        renderInputBall();
+        ui.setInputBallVisible(false);
         renderGoal();
     }
 
@@ -115,35 +141,110 @@ export function createPhysics(elements, config, ui) {
         checkGoalCollision();
     }
 
-    function moveBallWithKeyboard(horizontal, vertical) {
-        state.ball.vx += horizontal * config.ballKeyboardSpeed * 12;
-        state.ball.vy += vertical * config.ballKeyboardSpeed * 12;
-    }
+    /*
+     * The blue input ball is controlled by the camera and behaves like a
+     * kinematic object. It does not bounce around freely, but its measured
+     * velocity is used to strike the pink ball when the circles overlap.
+     */
+    function updateInputBall(target, deltaSeconds, strength) {
+        const bounds = getBounds();
+        const maxX = bounds.width - state.inputBall.size;
+        const maxY = bounds.height - state.inputBall.size;
+        const nextX = clamp(target.x, 0, maxX);
+        const nextY = clamp(target.y, 0, maxY);
+        const safeDeltaSeconds = Math.max(deltaSeconds, 0.016);
 
-    function applyMotionHit(hitX, hitY, strength) {
-        if (config.directFollowDebug) {
-            const bounds = getBounds();
-            state.ball.x = clamp(state.ball.x + hitX * 80 * strength, 0, bounds.width - state.ball.size);
-            state.ball.y = clamp(state.ball.y + hitY * 80 * strength, 0, bounds.height - state.ball.size);
-            state.ball.vx = 0;
-            state.ball.vy = 0;
-            renderBall();
-            checkGoalCollision();
+        if (!state.inputBall.visible) {
+            state.inputBall.x = nextX;
+            state.inputBall.y = nextY;
+            state.inputBall.vx = 0;
+            state.inputBall.vy = 0;
+            state.inputBall.visible = true;
+            renderInputBall();
             return;
         }
 
-        const followStrength = Math.max(config.minFollowStrength, strength);
-        const shotForce = config.ballShotImpulse * followStrength;
+        state.inputBall.vx = (nextX - state.inputBall.x) / safeDeltaSeconds;
+        state.inputBall.vy = (nextY - state.inputBall.y) / safeDeltaSeconds;
 
-        state.ball.vx += hitX * shotForce;
-        state.ball.vy += hitY * shotForce;
+        const speed = Math.hypot(state.inputBall.vx, state.inputBall.vy);
+        if (speed > config.inputBallMaxSpeed) {
+            const direction = normalizeVector(state.inputBall.vx, state.inputBall.vy);
+            state.inputBall.vx = direction.x * config.inputBallMaxSpeed;
+            state.inputBall.vy = direction.y * config.inputBallMaxSpeed;
+        }
+
+        state.inputBall.x = nextX;
+        state.inputBall.y = nextY;
+        renderInputBall();
+        resolveInputBallCollision(strength);
+    }
+
+    /*
+     * Circle collision is intentionally simple: the camera ball is treated as a
+     * moving striker, so only the pink ball receives the resulting impulse.
+     */
+    function resolveInputBallCollision(strength) {
+        if (!state.inputBall.visible) {
+            return;
+        }
+
+        const ballCenter = getCircleCenter(state.ball);
+        const inputCenter = getCircleCenter(state.inputBall);
+        const deltaX = ballCenter.x - inputCenter.x;
+        const deltaY = ballCenter.y - inputCenter.y;
+        const distance = Math.hypot(deltaX, deltaY);
+        const minimumDistance = state.ball.size / 2 + state.inputBall.size / 2;
+
+        if (distance <= 0 || distance >= minimumDistance) {
+            return;
+        }
+
+        const normal = {
+            x: deltaX / distance,
+            y: deltaY / distance,
+        };
+        const inputVelocityAlongNormal = state.inputBall.vx * normal.x + state.inputBall.vy * normal.y;
+        const ballVelocityAlongNormal = state.ball.vx * normal.x + state.ball.vy * normal.y;
+        const incomingSpeed = inputVelocityAlongNormal - ballVelocityAlongNormal;
+
+        if (incomingSpeed <= 0) {
+            return;
+        }
+
+        const impulse = incomingSpeed
+            * config.inputBallCollisionRestitution
+            * config.inputBallCollisionInfluence
+            * Math.max(config.minFollowStrength, strength);
+
+        state.ball.vx += normal.x * impulse;
+        state.ball.vy += normal.y * impulse;
+
+        const overlap = minimumDistance - distance;
+        state.ball.x += normal.x * overlap;
+        state.ball.y += normal.y * overlap;
 
         const speed = Math.hypot(state.ball.vx, state.ball.vy);
         if (speed > config.ballMaxSpeed) {
-            const limitedDirection = normalizeVector(state.ball.vx, state.ball.vy, hitX, hitY);
+            const limitedDirection = normalizeVector(state.ball.vx, state.ball.vy, normal.x, normal.y);
             state.ball.vx = limitedDirection.x * config.ballMaxSpeed;
             state.ball.vy = limitedDirection.y * config.ballMaxSpeed;
         }
+
+        renderBall();
+        checkGoalCollision();
+    }
+
+    function hideInputBall() {
+        state.inputBall.visible = false;
+        state.inputBall.vx = 0;
+        state.inputBall.vy = 0;
+        ui.setInputBallVisible(false);
+    }
+
+    function moveBallWithKeyboard(horizontal, vertical) {
+        state.ball.vx += horizontal * config.ballKeyboardSpeed * 12;
+        state.ball.vy += vertical * config.ballKeyboardSpeed * 12;
     }
 
     return {
@@ -151,7 +252,8 @@ export function createPhysics(elements, config, ui) {
         resetPositions,
         resetGame,
         advanceBallMotion,
+        updateInputBall,
+        hideInputBall,
         moveBallWithKeyboard,
-        applyMotionHit,
     };
 }

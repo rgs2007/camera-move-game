@@ -15,7 +15,7 @@ export function getDomElements() {
         cameraPreview: document.getElementById("cameraPreview"),
         playfieldCamera: document.getElementById("playfieldCamera"),
         playfield: document.getElementById("playfield"),
-        motionMarker: document.getElementById("motionMarker"),
+        inputBall: document.getElementById("inputBall"),
         debugChip: document.getElementById("debugChip"),
         ball: document.getElementById("ball"),
         goal: document.getElementById("goal"),
@@ -51,8 +51,8 @@ export function createUi(elements) {
         elements.playfieldCamera.classList.toggle("playfield-camera-live", isVisible);
     }
 
-    function setMotionMarkerVisible(isVisible) {
-        elements.motionMarker.classList.toggle("motion-marker-live", isVisible);
+    function setInputBallVisible(isVisible) {
+        elements.inputBall.classList.toggle("input-ball-live", isVisible);
     }
 
     function updateBall(position) {
@@ -63,9 +63,9 @@ export function createUi(elements) {
         elements.goal.style.transform = `translate3d(${position.x}px, ${position.y}px, 0)`;
     }
 
-    function updateMotionMarker(position, ballSize) {
-        elements.motionMarker.style.transform = `translate3d(${position.x + ballSize / 2 - 21}px, ${position.y + ballSize / 2 - 21}px, 0)`;
-        setMotionMarkerVisible(true);
+    function updateInputBall(position) {
+        elements.inputBall.style.transform = `translate3d(${position.x}px, ${position.y}px, 0)`;
+        setInputBallVisible(true);
     }
 
     function setDebugText(message) {
@@ -80,10 +80,10 @@ export function createUi(elements) {
         setScore,
         setLocalhostLinkText,
         setPlayfieldCameraVisible,
-        setMotionMarkerVisible,
+        setInputBallVisible,
         updateBall,
         updateGoal,
-        updateMotionMarker,
+        updateInputBall,
         setDebugText,
     };
 }
